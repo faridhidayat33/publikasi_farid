@@ -1,0 +1,494 @@
+---
+title: Prakiraan Cuaca
+description: Membuat Prediksi Prakiraan Cuaca 
+date: 10/31/2024
+author: Ahmad Farid Hidayat
+categories: [Cuaca, Prakiraan, Prediksi]
+draft: false
+show: true
+freeze: true
+---
+
+```{python}
+import numpy as np # linear algebra
+import pandas as pd #data processing, CSV file I/O (e.g.pd.read_csv)
+import matplotlib.pyplot as plt # data visualization
+import seaborn as sns # statistical data visualization 
+%matplotlib inline
+```
+
+```{python}
+data = pd.read_csv('weather.csv')
+```
+
+```{python}
+data
+```
+
+```{python}
+data.shape
+```
+
+```{python}
+data.columns=['dates','area','tempmin','tempmax','rainfall',
+              'evaporation','sunshine','windgustdir','windgustspeed','winddir9am',
+              'winddir3pm','windspeed9am','windspeed3pm','humidity9am','humidity3pm',
+              'pressure9am','pressure3pm','cloud9am','cloud3pm','temp9am',
+              'temp3pm','raintoday','raintomorrow']
+```
+
+```{python}
+data.head()
+```
+
+
+
+```{python}
+# find categorical variables
+
+categorical = [var for var in data.columns if data[var].dtype=='O']
+
+print('There are {} categorical variables\n'.format(len(categorical)))
+
+print('The categorical variables are :', categorical)
+```
+
+```{python}
+data[categorical]
+```
+
+```{python}
+data [categorical].isnull().sum()
+```
+
+```{python}
+#view frequency of categorical variables
+for var in categorical:
+    print(data[var].value_counts())
+```
+
+```{python}
+#view frequency distribution of categorical variables
+for var in categorical:
+    print(data[var].value_counts()/np.array(len(data),dtype=float))
+```
+
+```{python}
+#check for cardinality in categorical variables
+for var in categorical:
+    print(var,'contains',len(data[var].unique()),'labels')
+```
+
+# Mengekstrak, Membersihkan & Menghilangkan Kolom Tanggal pada Data Prakiraan Cuaca
+
+```{python}
+data['dates'].dtype
+```
+
+```{python}
+data['dates']=pd.to_datetime(data['dates'])
+```
+
+```{python}
+#extract year from date
+data['years']=data['dates'].dt.year
+data['years'].head()
+```
+
+```{python}
+#extract month from date
+data['month']=data['dates'].dt.month
+data['month'].head()
+```
+
+```{python}
+#extract day from date
+data['days']=data['dates'].dt.day
+data['days'].head()
+```
+
+```{python}
+#drop the original date variable
+data.drop('dates',axis=1,inplace=True)
+```
+
+```{python}
+data.head()
+```
+
+# Mengubah Kolom Area/Lokasi 
+
+```{python}
+#let's do One Hot Encoding of Location Variable
+#get k-1 dummy variables after One Hot Encoding
+#preview the dataset with head() method
+
+pd.get_dummies(data.area,drop_first=True).head()
+```
+
+# Mengubah Kolom Windgustdir
+
+```{python}
+pd.get_dummies(data.windgustdir,drop_first=True,dummy_na=True).head()
+```
+
+# Mengubah Kolom Winddir9am
+
+```{python}
+pd.get_dummies(data.winddir9am,drop_first=True,dummy_na=True).head()
+```
+
+# Mengubah Kolom Winddir3pm
+
+```{python}
+pd.get_dummies(data.winddir3pm,drop_first=True,dummy_na=True).head()
+```
+
+# Mengubah Kolom Rain Today
+
+```{python}
+pd.get_dummies(data.raintoday,drop_first=True,dummy_na=True).head()
+```
+
+# Mengubah Kolom Rain Tomorrow
+
+```{python}
+pd.get_dummies(data.raintomorrow,drop_first=True,dummy_na=True).head()
+```
+
+# Mencari Data Numerik
+
+```{python}
+# find numeric variables
+
+numeric = [var for var in data.columns if data[var].dtype !='O']
+
+print('There are {} numeric variables\n'.format(len(numeric)))
+
+print('The numeric variables are :', numeric)
+```
+
+```{python}
+data[numeric]
+```
+
+```{python}
+data[numeric].duplicated().sum()
+```
+
+```{python}
+data[numeric].isnull().sum()
+```
+
+```{python}
+print(round(data[numeric].describe()),2)
+```
+
+windgustspeed,rainfall,evaporation,windspeed9am,windspeed3pm
+
+```{python}
+plt.figure(figsize=(15,10))
+
+plt.subplot(3, 2, 1)
+fig = data.boxplot(column='rainfall')
+fig.set_title('')
+fig.set_ylabel('rainfall')
+
+plt.subplot(3, 2, 2)
+fig = data.boxplot(column='windgustspeed')
+fig.set_title('')
+fig.set_ylabel('windgustspeed')
+
+plt.subplot(3, 2, 3)
+fig = data.boxplot(column='evaporation')
+fig.set_title('')
+fig.set_ylabel('evaporation')
+
+plt.subplot(3, 2, 4)
+fig = data.boxplot(column='windspeed9am')
+fig.set_title('')
+fig.set_ylabel('windspeed9am')
+
+plt.subplot(3, 2, 5)
+fig = data.boxplot(column='windspeed3pm')
+fig.set_title('')
+fig.set_ylabel('windspeed3pm')
+```
+
+```{python}
+plt.figure(figsize=(15,10))
+
+
+plt.subplot(3, 2, 1)
+fig = data.rainfall.hist(bins=10)
+fig.set_xlabel('rainfall')
+fig.set_ylabel('raintomorrow')
+
+plt.subplot(3, 2, 2)
+fig = data.evaporation.hist(bins=10)
+fig.set_xlabel('evaporation')
+fig.set_ylabel('raintomorrow')
+
+plt.subplot(3, 2, 3)
+fig = data.windgustspeed.hist(bins=10)
+fig.set_xlabel('windgustspeed')
+fig.set_ylabel('raintomorrow')
+
+plt.subplot(3, 2, 4)
+fig = data.windspeed9am.hist(bins=10)
+fig.set_xlabel('windspeed9am')
+fig.set_ylabel('raintomorrow')
+
+plt.subplot(3, 2, 5)
+fig = data.windspeed3pm.hist(bins=10)
+fig.set_xlabel('windspeed3pm')
+fig.set_ylabel('raintomorrow')
+```
+
+```{python}
+# find outliers for Rainfall variable
+
+IQR = data.rainfall.quantile(0.75) - data.rainfall.quantile(0.25)
+Lower_fence = data.rainfall.quantile(0.25) - (IQR * 3)
+Upper_fence = data.rainfall.quantile(0.75) + (IQR * 3)
+print('rainfall outliers are values < {lowerboundary} or > {upperboundary}'.format(lowerboundary=Lower_fence, upperboundary=Upper_fence))
+
+# find outliers for evaporation variable
+
+IQR = data.evaporation.quantile(0.75) - data.evaporation.quantile(0.25)
+Lower_fence = data.evaporation.quantile(0.25) - (IQR * 3)
+Upper_fence = data.evaporation.quantile(0.75) + (IQR * 3)
+print('evaporation outliers are values < {lowerboundary} or > {upperboundary}'.format(lowerboundary=Lower_fence, upperboundary=Upper_fence))
+
+# find outliers for windgustspeed variable
+
+IQR = data.windgustspeed.quantile(0.75) - data.windgustspeed.quantile(0.25)
+Lower_fence = data.windgustspeed.quantile(0.25) - (IQR * 3)
+Upper_fence = data.windgustspeed.quantile(0.75) + (IQR * 3)
+print('windgustspeed outliers are values < {lowerboundary} or > {upperboundary}'.format(lowerboundary=Lower_fence, upperboundary=Upper_fence))
+
+# find outliers for windspeed9am variable
+
+IQR = data.windspeed9am.quantile(0.75) - data.windspeed9am.quantile(0.25)
+Lower_fence = data.windspeed9am.quantile(0.25) - (IQR * 3)
+Upper_fence = data.windspeed9am.quantile(0.75) + (IQR * 3)
+print('windspeed9am outliers are values < {lowerboundary} or > {upperboundary}'.format(lowerboundary=Lower_fence, upperboundary=Upper_fence))
+
+# find outliers for windspeed3pm variable
+
+IQR = data.windspeed3pm.quantile(0.75) - data.windspeed3pm.quantile(0.25)
+Lower_fence = data.windspeed3pm.quantile(0.25) - (IQR * 3)
+Upper_fence = data.windspeed3pm.quantile(0.75) + (IQR * 3)
+print('windspeed3pm outliers are values < {lowerboundary} or > {upperboundary}'.format(lowerboundary=Lower_fence, upperboundary=Upper_fence))
+```
+
+```{python}
+x = data.drop(['raintomorrow'],axis=1)
+y= data['raintomorrow']
+```
+
+```{python}
+# split X and y into training and testing sets
+
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
+```
+
+```{python}
+# check the shape of X_train and X_test
+
+x_train.shape, x_test.shape
+```
+
+```{python}
+# print percentage of missing values in the numerical variables in training set
+
+for col in numeric:
+    if x_train[col].isnull().mean()>0:
+        print(col, round(x_train[col].isnull().mean(),4))
+```
+
+```{python}
+# impute missing values in X_train and X_test with respective column median in X_train
+
+for data in [x_train, x_test]:
+    for col in numeric:
+        col_median=x_train[col].median()
+        data[col].fillna(col_median, inplace=True)
+```
+
+```{python}
+x_train[numeric].isnull().sum()
+```
+
+```{python}
+numeric
+```
+
+```{python}
+categorical.remove('dates')
+```
+
+```{python}
+categorical.remove('raintomorrow')
+```
+
+```{python}
+categorical
+```
+
+```{python}
+# print percentage of missing values in the categorical variables in training set
+
+x_train[categorical].isnull().mean()
+```
+
+```{python}
+# impute missing categorical variables with most frequent value
+
+for df2 in [x_train, x_test]:
+    df2['windgustdir'].fillna(x_train['windgustdir'].mode()[0], inplace=True)
+    df2['winddir9am'].fillna(x_train['winddir9am'].mode()[0], inplace=True)
+    df2['winddir3pm'].fillna(x_train['winddir3pm'].mode()[0], inplace=True)
+    df2['raintoday'].fillna(x_train['raintoday'].mode()[0], inplace=True)
+```
+
+```{python}
+data[categorical].isnull().sum()
+```
+
+```{python}
+np.__version__
+```
+
+```{python}
+pd.__version__
+```
+
+```{python}
+def max_value(df3, variable, top):
+    return np.where(df3[variable]>top, top, df3[variable])
+
+for df3 in [x_train, x_test]:
+    df3['rainfall'] = max_value(df3, 'rainfall', 3.2)
+    df3['evaporation'] = max_value(df3, 'evaporation', 21.8)
+    df3['windspeed9am'] = max_value(df3, 'windspeed9am', 55)
+    df3['windspeed3pm'] = max_value(df3, "windspeed3pm", 57)
+    df3['windgustspeed'] = max_value(df3, 'windgustspeed', 99)
+```
+
+```{python}
+x_train[numeric].describe()
+```
+
+```{python}
+categorical
+```
+
+```{python}
+# encode RainToday variable
+
+import category_encoders as ce
+
+encoder = ce.BinaryEncoder(cols=['raintoday'])
+
+x_train = encoder.fit_transform(x_train)
+
+x_test = encoder.transform(x_test)
+```
+
+```{python}
+x_train.head()
+```
+
+```{python}
+x_train = pd.concat([x_train[numeric], x_train[["raintoday_0", "raintoday_1"]],
+                     pd.get_dummies(x_train.area),
+                     pd.get_dummies(x_train.windgustdir),
+                     pd.get_dummies(x_train.winddir9am),
+                     pd.get_dummies(x_train.winddir3pm)],axis=1)
+```
+
+```{python}
+x_train.head()
+```
+
+```{python}
+x_test = pd.concat([x_test[numeric], x_test[["raintoday_0", "raintoday_1"]],
+                    pd.get_dummies(x_test.area),
+                    pd.get_dummies(x_test.windgustdir),
+                    pd.get_dummies(x_test.winddir9am),
+                    pd.get_dummies(x_test.winddir3pm),],axis=1)
+```
+
+```{python}
+x_test
+```
+
+```{python}
+x_train.describe()
+```
+
+```{python}
+col=x_train.columns
+```
+
+```{python}
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+
+x_train = scaler.fit_transform(x_train)
+
+x_test = scaler.transform(x_test)
+```
+
+```{python}
+x_train = pd.DataFrame(x_train, columns=[col])
+```
+
+```{python}
+x_test = pd.DataFrame(x_test, columns=[col])
+```
+
+```{python}
+x_train.describe()
+```
+
+```{python}
+y_train.fillna(y_train.mode()[0], inplace=True)
+y_test.fillna(y_train.mode()[0], inplace=True)
+```
+
+```{python}
+# train a logistic regression model on the training set
+from sklearn.linear_model import LogisticRegression
+
+
+# instantiate the model
+logreg = LogisticRegression(solver='liblinear', random_state=0)
+
+
+# fit the model
+logreg.fit(x_train,y_train)
+```
+
+```{python}
+y_pred_test = logreg.predict(x_test)
+
+y_pred_test[-3]
+```
+
+```{python}
+x_test.iloc[-4].tempmin=0.7
+```
+
+```{python}
+x_test.iloc[-4]
+```
+
+```{python}
+logreg.predict(x_test.loc[29:33])
+```
+

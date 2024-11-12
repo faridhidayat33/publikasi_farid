@@ -1,0 +1,22 @@
+project:
+  type: website
+
+website:
+  sidebar:
+    contents:
+      - href: table.qmd
+        text: "Home"
+      - href: bermain_tenis.qmd
+        text: "Bermain Tenis"
+      - href: prakiraan_cuaca.qmd
+        text: "Prakiraan Cuaca"
+      - href: titanic.qmd
+        text: "Kapal Titanic"
+
+format:
+  html:
+    theme: cosmo
+    css: style.css
+    toc: true
+
+
