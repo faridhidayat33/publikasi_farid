@@ -13,6 +13,8 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: install requirement
+        run: python3 -m pip install jupyter
       - name: Check out repository
         uses: actions/checkout@v4
 
